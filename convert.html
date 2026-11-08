@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>僧中词典 · TXT 转 JS 分片</title>
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: #f5f1e8;
+  color: #2b2721;
+  font: 15px/1.65 "Segoe UI", "Microsoft YaHei", "PingFang SC", "Iskoola Pota", "Nirmala UI", Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 26px 18px 52px; }
+
+/* ---------- 头部 ---------- */
+.top {
+  display: -ms-flexbox; display: flex;
+  -ms-flex-align: center; align-items: center;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e2d8c6;
+  margin-bottom: 22px;
+}
+.logo {
+  width: 48px; height: 48px; border-radius: 10px;
+  background: #2f2a22; color: #e8c47a;
+  display: -ms-flexbox; display: flex;
+  -ms-flex-align: center; align-items: center;
+  -ms-flex-pack: center; justify-content: center;
+  margin-right: 14px; flex: 0 0 auto;
+}
+.title-box { min-width: 0; }
+.title-box h1 {
+  margin: 0 0 2px; font-size: 22px; line-height: 1.3; letter-spacing: .5px;
+}
+.title-box p { margin: 0; color: #7a6f5d; font-size: 13px; }
+.badge {
+  margin-left: auto; flex: 0 0 auto;
+  font-size: 12px; color: #6b5a35; background: #efe5d0;
+  border: 1px solid #e0d2b6; border-radius: 20px; padding: 3px 11px; white-space: nowrap;
+}
+
+/* ---------- 规格条 ---------- */
+.specs { margin: 0 0 20px; }
+.chip {
+  display: inline-block; font-size: 12.5px; color: #5f5546;
+  background: #fffdf8; border: 1px solid #e5dccb; border-radius: 6px;
+  padding: 4px 10px; margin: 0 8px 8px 0; white-space: nowrap;
+}
+.chip b { color: #8a5a1c; font-weight: 600; }
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: #fffdf9;
+  border: 1px solid #e5dccb;
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 10px rgba(80, 60, 20, .04);
+}
+.card h2 {
+  margin: 0 0 4px; font-size: 16px; color: #3a3328;
+  display: -ms-flexbox; display: flex;
+  -ms-flex-align: center; align-items: center;
+}
+.card h2 svg { margin-right: 8px; color: #9a6a1e; flex: 0 0 auto; }
+.card .desc { margin: 0 0 16px; color: #7c7160; font-size: 13px; }
+.hide { display: none !important; }
+
+/* ---------- 选择文件 ---------- */
+.drop {
+  position: relative; display: block;
+  border: 2px dashed #d8c9ad; border-radius: 10px;
+  background: #fcf9f1; text-align: center;
+  padding: 30px 18px 26px; transition: border-color .18s, background .18s;
+}
+.drop:hover, .drop.over { border-color: #b8862b; background: #fdf4e2; }
+.drop .drop-icon { color: #b8862b; margin-bottom: 6px; }
+.drop .drop-title { font-size: 15px; color: #443a2a; margin-bottom: 3px; }
+.drop .drop-sub { font-size: 12.5px; color: #918676; }
+.drop input[type=file] {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  opacity: 0; filter: alpha(opacity=0); cursor: pointer;
+}
+.pick-meta { margin-top: 12px; font-size: 13px; color: #6c614f; min-height: 20px; }
+.pick-meta b { color: #2f2a22; }
+.small-note { font-size: 12.5px; color: #8c8070; margin-top: 10px; }
+
+/* ---------- 进度 ---------- */
+.prog-head {
+  display: -ms-flexbox; display: flex;
+  -ms-flex-align: center; align-items: center;
+  margin-bottom: 8px;
+}
+.prog-label { font-size: 14px; color: #3a3328; font-weight: 600; }
+.prog-pct { margin-left: auto; font-size: 13px; color: #8a5a1c; font-variant-numeric: tabular-nums; }
+.bar {
+  height: 10px; background: #ece3d1; border-radius: 6px; overflow: hidden;
+}
+.bar > i {
+  display: block; height: 10px; width: 0;
+  background: #b8862b;
+  background: linear-gradient(90deg, #a97724 0%, #d5a64a 100%);
+  border-radius: 6px; transition: width .18s linear;
+}
+.prog-sub { margin-top: 8px; font-size: 13px; color: #776c5b; min-height: 22px; }
+
+/* ---------- 统计 ---------- */
+.stat-grid { margin: 0 -6px; }
+.stat {
+  display: inline-block; vertical-align: top;
+  width: 25%; padding: 0 6px 12px;
+}
+.stat-inner {
+  background: #faf7ef; border: 1px solid #eadfca; border-radius: 8px;
+  padding: 10px 12px; min-height: 70px;
+}
+.stat-k { font-size: 12px; color: #8a7e6b; }
+.stat-v { font-size: 20px; color: #2f2a22; font-weight: 600; line-height: 1.4; font-variant-numeric: tabular-nums; }
+.stat-n { font-size: 11.5px; color: #9a8e7b; line-height: 1.45; }
+.stat.warn .stat-v { color: #b25c22; }
+.stat.bad .stat-v { color: #b03131; }
+.head-note { font-size: 12.5px; color: #857a68; margin-top: 2px; }
+
+/* ---------- 样例 ---------- */
+.samples { margin-top: 14px; border-top: 1px dashed #e5dccb; padding-top: 12px; }
+.samples h3 { margin: 0 0 8px; font-size: 13px; color: #6f6452; font-weight: 600; }
+.sample-group { margin-bottom: 10px; font-size: 12.5px; color: #6f6452; }
+.sample-group .g-title { color: #8a5a1c; font-weight: 600; }
+.sample-group ul { margin: 4px 0 0; padding-left: 20px; color: #7c7160; }
+.sample-group li { margin-bottom: 2px; word-break: break-all; }
+.sample-group code { font-family: Consolas, "Courier New", monospace; font-size: 12px; color: #4a4134; background: #f3eee3; padding: 0 3px; }
+
+/* ---------- 表格 ---------- */
+.table-wrap { overflow-x: auto; }
+table.shards { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.shards th, table.shards td {
+  border-bottom: 1px solid #eee5d5; padding: 8px 10px; text-align: left; white-space: nowrap;
+}
+table.shards th { background: #f7f2e7; color: #6d6251; font-weight: 600; font-size: 12.5px; }
+table.shards td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.shards tr:last-child td { border-bottom: 0; }
+.pill { display: inline-block; font-size: 11.5px; line-height: 1.5; padding: 1px 8px; border-radius: 20px; }
+.pill.ok { background: #eaf3e6; color: #3d6b32; border: 1px solid #cfe3c6; }
+.pill.bad { background: #fbe8e8; color: #a92f2f; border: 1px solid #f0c8c8; }
+.btn-small {
+  font: inherit; font-size: 12px; cursor: pointer;
+  background: #fffdf9; border: 1px solid #d9cbb0; color: #6b5327;
+  border-radius: 5px; padding: 2px 10px;
+}
+.btn-small:hover { background: #f6edda; border-color: #c2ab85; }
+.total-line { margin-top: 12px; font-size: 12.5px; color: #7d7261; }
+
+/* ---------- 校验 ---------- */
+.verify-pass { border-left: 4px solid #5b8a4a; background: #f4f9f1; padding: 12px 14px; border-radius: 0 8px 8px 0; }
+.verify-fail { border-left: 4px solid #b03131; background: #fdf2f2; padding: 12px 14px; border-radius: 0 8px 8px 0; }
+.verify-pass .vt, .verify-fail .vt { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.verify-pass .vt { color: #3f6a32; }
+.verify-fail .vt { color: #a92f2f; }
+.verify-body { font-size: 13px; color: #5f5546; }
+.verify-body ul { margin: 6px 0 0; padding-left: 20px; }
+.verify-body li { margin-bottom: 3px; }
+.sha { font-family: Consolas, "Courier New", monospace; font-size: 12px; word-break: break-all; color: #4a4134; }
+
+/* ---------- 下载 ---------- */
+.btn {
+  font: inherit; cursor: pointer; border-radius: 8px; padding: 9px 18px;
+  border: 1px solid #d9cbb0; background: #fffdf9; color: #5f4a22;
+}
+.btn:hover { background: #f8f0dd; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn-primary {
+  background: #2f2a22; border-color: #2f2a22; color: #f6ead0;
+  font-weight: 600; padding: 11px 22px; font-size: 15px;
+}
+.btn-primary:hover { background: #443b2d; }
+.btn-icon { display: inline-block; vertical-align: -3px; margin-right: 7px; }
+.down-note { font-size: 12.5px; color: #877b69; margin-top: 12px; }
+.down-note b { color: #7a4f16; }
+
+/* ---------- 提示框 ---------- */
+.alert { border-radius: 10px; padding: 14px 16px; font-size: 13.5px; }
+.alert.warn { background: #fdf6e7; border: 1px solid #ecd9ac; border-left: 4px solid #c68a22; }
+.alert.error { background: #fdf1f1; border: 1px solid #efc9c9; border-left: 4px solid #b03131; }
+.alert-title { font-size: 14px; font-weight: 600; margin-bottom: 5px; display: -ms-flexbox; display: flex; -ms-flex-align: center; align-items: center; }
+.alert-title svg { margin-right: 7px; }
+.alert.warn .alert-title { color: #8a5a12; }
+.alert.error .alert-title { color: #9c2a2a; }
+.alert p { margin: 0 0 8px; color: #5f5546; }
+.alert .btn { margin-top: 2px; }
+
+/* ---------- 帮助 ---------- */
+.help-grid { font-size: 13px; color: #5f5546; }
+.help-grid h3 { margin: 12px 0 4px; font-size: 13.5px; color: #4a4134; }
+.help-grid h3:first-child { margin-top: 0; }
+.help-grid ol, .help-grid ul { margin: 0; padding-left: 22px; }
+.help-grid li { margin-bottom: 3px; }
+.help-grid code { font-family: Consolas, "Courier New", monospace; font-size: 12px; background: #f3eee3; padding: 0 3px; color: #5a4c35; }
+
+.foot { margin-top: 26px; padding-top: 16px; border-top: 1px solid #e2d8c6; font-size: 12px; color: #9a8f7d; text-align: center; }
+
+@media (max-width: 760px) {
+  .stat { width: 50%; }
+  .badge { display: none; }
+  .card { padding: 16px; }
+  .title-box h1 { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="logo" aria-hidden="true">
+      <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5H6.5A2.5 2.5 0 0 0 4 21V5.5z"/>
+        <path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/>
+        <path d="M9.5 7.5h6"/>
+      </svg>
+    </div>
+    <div class="title-box">
+      <h1>僧中词典 · TXT 转 JS 分片</h1>
+      <p>把词典底本按片打包成 <code>data/shard_*.js</code> 与 <code>data/manifest.js</code>，本地双击可用，不联网</p>
+    </div>
+    <span class="badge" id="readyBadge">正在初始化…</span>
+  </div>
+
+  <div class="specs">
+    <span class="chip">底本：<b>6 列 TSV</b>（en / si / type / zh / status / note）</span>
+    <span class="chip">编码：<b>UTF-8 / UTF-8 BOM</b></span>
+    <span class="chip">每片：<b>严格小于 5,000,000 字节</b></span>
+    <span class="chip">产物：<b>shard_*.js + manifest.js</b></span>
+    <span class="chip">运行：<b>file:// 本地直接打开</b></span>
+  </div>
+
+  <div class="card hide" id="alertCard">
+    <div class="alert warn" id="alertBox">
+      <div class="alert-title" id="alertTitle"></div>
+      <div id="alertMsg"></div>
+      <div id="alertActions"></div>
+    </div>
+  </div>
+
+  <div class="card" id="pickCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+      </svg>
+      第 1 步 · 选择词典 TXT
+    </h2>
+    <p class="desc">选择后自动解析、切分并回读校验。原文件不会被改动。</p>
+    <div class="drop" id="dropZone">
+      <svg class="drop-icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15.5H6.5A2.5 2.5 0 0 0 4 21V6.5z"/>
+        <path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/>
+        <path d="M12 7v7"/><path d="M9 10.5L12 7l3 3.5"/>
+      </svg>
+      <div class="drop-title">点击选择 TXT 文件，或把文件拖到这里</div>
+      <div class="drop-sub">支持 UTF-8、UTF-8 BOM；建议使用 data/txt/dictionary.txt</div>
+      <input type="file" id="fileInput" accept=".txt,text/plain,text/tab-separated-values">
+    </div>
+    <div class="pick-meta" id="pickMeta">尚未选择文件。</div>
+    <div class="small-note" id="supportNote"></div>
+  </div>
+
+  <div class="card hide" id="progCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/>
+        <path d="M4.9 4.9l2.1 2.1"/><path d="M17 17l2.1 2.1"/><path d="M19.1 4.9L17 7"/><path d="M7 17L4.9 19.1"/>
+      </svg>
+      第 2 步 · 解析与生成
+    </h2>
+    <div class="prog-head">
+      <span class="prog-label" id="progLabel">准备中…</span>
+      <span class="prog-pct" id="progPct">0%</span>
+    </div>
+    <div class="bar"><i id="progBar"></i></div>
+    <div class="prog-sub" id="progSub"></div>
+  </div>
+
+  <div class="card hide" id="statCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>
+      </svg>
+      第 3 步 · 解析统计
+    </h2>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="head-note" id="headNote"></div>
+    <div class="samples hide" id="sampleBlock">
+      <h3>异常样例（仅展示前 5 条，完整数据仍保留在分片中）</h3>
+      <div id="sampleList"></div>
+    </div>
+  </div>
+
+  <div class="card hide" id="shardCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l9 5-9 5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/>
+      </svg>
+      第 4 步 · 分片清单
+    </h2>
+    <div class="table-wrap">
+      <table class="shards">
+        <thead>
+          <tr><th>#</th><th>文件</th><th>条数</th><th>体积</th><th>状态</th><th>下载</th></tr>
+        </thead>
+        <tbody id="shardTbody"></tbody>
+      </table>
+    </div>
+    <div class="total-line" id="shardTotal"></div>
+  </div>
+
+  <div class="card hide" id="verifyCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/>
+      </svg>
+      第 5 步 · 回读校验
+    </h2>
+    <div id="verifyBody"></div>
+  </div>
+
+  <div class="card hide" id="downCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 4v12"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/>
+      </svg>
+      第 6 步 · 下载产物
+    </h2>
+    <p class="desc">下载后覆盖到词典根目录的 <code>data</code> 文件夹，保持文件名不变。</p>
+    <button type="button" class="btn btn-primary" id="downAllBtn">
+      <span class="btn-icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 4v12"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/>
+        </svg>
+      </span>
+      <span id="downAllText">一键下载全部产物</span>
+    </button>
+    <button type="button" class="btn" id="downManifestBtn" style="margin-left:8px;">仅下载 manifest.js</button>
+    <div class="down-note" id="downNote">
+      <b>提示：</b>浏览器可能询问“是否允许下载多个文件”，请选择允许；若被拦截，可使用上面的表格逐个下载。
+    </div>
+  </div>
+
+  <div class="card" id="helpCard">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 8v.1"/><path d="M12 11.5v4.5"/>
+      </svg>
+      用法与限制
+    </h2>
+    <div class="help-grid">
+      <h3>用法</h3>
+      <ol>
+        <li>选择 <code>data/txt/dictionary.txt</code>（UTF-8 或 UTF-8 BOM）。</li>
+        <li>工具自动按行解析，生成 <code>data/shard_001.js</code>、<code>shard_002.js</code>……与 <code>data/manifest.js</code>。</li>
+        <li>回读校验通过后，一键下载全部产物。</li>
+        <li>把下载得到的 <code>shard_*.js</code>、<code>manifest.js</code> 覆盖到词典根目录的 <code>data/</code> 下，双击 <code>index.html</code> 即可按片加载。</li>
+      </ol>
+      <h3>数据格式</h3>
+      <ul>
+        <li>6 列 TSV：<code>en</code>、<code>si</code>、<code>type</code>、<code>zh</code>、<code>status</code>、<code>note</code>；第 7 列及以后忽略。</li>
+        <li>首行若为表头会自动识别并跳过；空行跳过；空词头、字段缺失、重复行只统计、不删除。</li>
+        <li>分片格式与现有 <code>app.js</code> 一致：<code>window.DICT_ROWS = (window.DICT_ROWS || []).concat([...])</code>，必须按 manifest 顺序加载。</li>
+      </ul>
+      <h3>限制</h3>
+      <ul>
+        <li>浏览器不能直接写入 <code>data/</code>，只能触发下载；多文件下载可能被浏览器拦截或需要授权。</li>
+        <li>只支持 UTF-8 / UTF-8 BOM。检测到非法字节会提示，可另存为 UTF-8 后重试，或忽略警告继续（产物可能含替换字符）。</li>
+        <li>单片严格小于 5,000,000 字节；若单条词条本身就超过上限，会报错停止，不生成缺损分片。</li>
+        <li>只新增分片与清单，不会改写 <code>data/extras.js</code>、<code>data/marks.js</code> 等释义增强层。</li>
+        <li>解析在浏览器内存中完成，建议源文件不超过 100MB；超大文件会较慢。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot">僧中词典 · 转换工具 v1 · 纯前端离线运行 · 不修改源文件</div>
+</div>
+
+<script id="coreScript">
+/* ============================================================
+   僧中词典 · 转换核心
+   - ES5 语法，不依赖 jQuery / 框架 / CDN
+   - 输出格式严格对齐现有 build_data.ps1 与 app.js：
+     每片：window.DICT_ROWS = (window.DICT_ROWS || []).concat([...])
+     清单：window.DICT_MANIFEST = {...}
+   ============================================================ */
+(function (global) {
+  'use strict';
+
+  var LIMIT = 5000000;                 /* 严格小于 5MB（按字节） */
+  var TAIL = '\n]);\n';
+  var TAIL_BYTES = 5;
+  var HEADER_A = '/* 僧中词典数据分片 ';
+  var HEADER_B = ' · 本片 ';
+  var HEADER_C = ' 条 */\nwindow.DICT_ROWS = (window.DICT_ROWS || []).concat([\n';
+  var COLUMNS = ['en', 'si', 'type', 'zh', 'status', 'note'];
+
+  /* ---------- 基础工具 ---------- */
+  function utf8ByteLength(str) {
+    var n = str.length, bytes = 0, i, c, d;
+    for (i = 0; i < n; i++) {
+      c = str.charCodeAt(i);
+      if (c < 0x80) { bytes += 1; }
+      else if (c < 0x800) { bytes += 2; }
+      else if (c >= 0xD800 && c <= 0xDBFF) {
+        d = (i + 1 < n) ? str.charCodeAt(i + 1) : 0;
+        if (d >= 0xDC00 && d <= 0xDFFF) { bytes += 4; i++; }
+        else { bytes += 3; }
+      } else { bytes += 3; }
+    }
+    return bytes;
+  }
+
+  function pad3(n) {
+    var s = String(n);
+    while (s.length < 3) { s = '0' + s; }
+    return s;
+  }
+
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+  function nowStamp() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  function headerText(no, count) {
+    return HEADER_A + pad3(no) + HEADER_B + count + HEADER_C;
+  }
+
+  var HEADER_FIXED_BYTES = utf8ByteLength(HEADER_A) + utf8ByteLength(HEADER_B) + utf8ByteLength(HEADER_C);
+
+  function headerBytes(no, count) {
+    /* 仅数字部分变长，中文固定部分预先计算，避免每行都做整串编码估算 */
+    return HEADER_FIXED_BYTES + String(pad3(no)).length + String(count).length;
+  }
+
+  function jsonEscape(v) {
+    v = (v === null || v === undefined) ? '' : String(v);
+    v = v.replace(/[\u0000-\u001F\u2028\u2029]/g, ' ');
+    v = v.replace(/\\/g, '\\\\');
+    v = v.replace(/"/g, '\\"');
+    return v;
+  }
+
+  function quote(v) {
+    return '"' + jsonEscape(v) + '"';
+  }
+
+  function serializeRow(row) {
+    return '["' + jsonEscape(row[0]) + '","' + jsonEscape(row[1]) + '","' +
+      jsonEscape(row[2]) + '","' + jsonEscape(row[3]) + '","' +
+      jsonEscape(row[4]) + '","' + jsonEscape(row[5]) + '"]';
+  }
+
+  function hasOwn(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+  }
+
+  function countReplacement(str) {
+    var n = 0, pos = 0;
+    while ((pos = str.indexOf('\uFFFD', pos)) !== -1) { n++; pos++; }
+    return n;
+  }
+
+  function snippetAround(str, pos) {
+    if (pos < 0) { return ''; }
+    var start = pos - 18; if (start < 0) { start = 0; }
+    var end = pos + 18; if (end > str.length) { end = str.length; }
+    return str.substring(start, end).replace(/[\r\n\t]/g, ' ');
+  }
+
+  /* ---------- 手动 UTF-8 解码（TextDecoder 不可用时的降级） ---------- */
+  function decodeUtf8Manual(bytes, start) {
+    var out = [], codes = [], invalid = 0, i = start || 0, n = bytes.length;
+    function flush() {
+      if (codes.length) {
+        out.push(String.fromCharCode.apply(null, codes));
+        codes = [];
+      }
+    }
+    function pushCode(c) {
+      if (c > 0xFFFF) {
+        c -= 0x10000;
+        codes.push(0xD800 + (c >> 10));
+        codes.push(0xDC00 + (c & 0x3FF));
+      } else {
+        codes.push(c);
+      }
+    }
+    function isCont(b) { return b >= 0x80 && b <= 0xBF; }
+    while (i < n) {
+      var b0 = bytes[i];
+      if (b0 < 0x80) {
+        codes.push(b0); i++;
+      } else if (b0 >= 0xC2 && b0 <= 0xDF) {
+        if (i + 1 < n && isCont(bytes[i + 1])) {
+          pushCode(((b0 & 0x1F) << 6) | (bytes[i + 1] & 0x3F));
+          i += 2;
+        } else {
+          invalid++; codes.push(0xFFFD); i++;
+        }
+      } else if (b0 >= 0xE0 && b0 <= 0xEF) {
+        if (i + 2 < n && isCont(bytes[i + 1]) && isCont(bytes[i + 2])) {
+          var c3 = ((b0 & 0x0F) << 12) | ((bytes[i + 1] & 0x3F) << 6) | (bytes[i + 2] & 0x3F);
+          if (c3 < 0x800 || (c3 >= 0xD800 && c3 <= 0xDFFF)) {
+            invalid++; codes.push(0xFFFD);
+          } else {
+            pushCode(c3);
+          }
+          i += 3;
+        } else {
+          invalid++; codes.push(0xFFFD); i++;
+        }
+      } else if (b0 >= 0xF0 && b0 <= 0xF4) {
+        if (i + 3 < n && isCont(bytes[i + 1]) && isCont(bytes[i + 2]) && isCont(bytes[i + 3])) {
+          var c4 = ((b0 & 0x07) << 18) | ((bytes[i + 1] & 0x3F) << 12) |
+            ((bytes[i + 2] & 0x3F) << 6) | (bytes[i + 3] & 0x3F);
+          if (c4 < 0x10000 || c4 > 0x10FFFF) {
+            invalid++; codes.push(0xFFFD);
+          } else {
+            pushCode(c4);
+          }
+          i += 4;
+        } else {
+          invalid++; codes.push(0xFFFD); i++;
+        }
+      } else {
+        invalid++; codes.push(0xFFFD); i++;
+      }
+      if (codes.length >= 4096) { flush(); }
+    }
+    flush();
+    return { text: out.join(''), invalid: invalid };
+  }
+
+  /* ---------- SHA-256（纯 JS，同步分块调用） ---------- */
+  var K = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+  ];
+
+  function Sha256() {
+    this.h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+    this.w = new Array(64);
+    this.block = new Uint8Array(64);
+    this.blockLen = 0;
+    this.totalLo = 0;
+    this.totalHi = 0;
+  }
+
+  Sha256.prototype.compress = function (block) {
+    var w = this.w, h = this.h, i, j, x, y, s0, s1, t1, t2;
+    for (i = 0; i < 16; i++) {
+      j = i * 4;
+      w[i] = ((block[j] << 24) | (block[j + 1] << 16) | (block[j + 2] << 8) | block[j + 3]) | 0;
+    }
+    for (i = 16; i < 64; i++) {
+      x = w[i - 15]; y = w[i - 2];
+      s0 = ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
+      s1 = ((y >>> 17) | (y << 15)) ^ ((y >>> 19) | (y << 13)) ^ (y >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+    }
+    var a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+    for (i = 0; i < 64; i++) {
+      s1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+      var ch = (e & f) ^ ((~e) & g);
+      t1 = (hh + s1 + ch + K[i] + w[i]) | 0;
+      s0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+      var maj = (a & b) ^ (a & c) ^ (b & c);
+      t2 = (s0 + maj) | 0;
+      hh = g; g = f; f = e; e = (d + t1) | 0;
+      d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    h[0] = (h[0] + a) | 0; h[1] = (h[1] + b) | 0; h[2] = (h[2] + c) | 0; h[3] = (h[3] + d) | 0;
+    h[4] = (h[4] + e) | 0; h[5] = (h[5] + f) | 0; h[6] = (h[6] + g) | 0; h[7] = (h[7] + hh) | 0;
+  };
+
+  Sha256.prototype.update = function (bytes) {
+    var n = bytes.length, i = 0, j, bl = this.blockLen, block = this.block;
+    var newLo = this.totalLo + n;
+    this.totalHi += Math.floor(newLo / 4294967296);
+    this.totalLo = newLo % 4294967296;
+
+    if (bl > 0) {
+      var need = 64 - bl;
+      if (n < need) {
+        for (j = 0; j < n; j++) { block[bl + j] = bytes[j]; }
+        this.blockLen = bl + n;
+        return;
+      }
+      for (j = 0; j < need; j++) { block[bl + j] = bytes[j]; }
+      this.compress(block);
+      this.blockLen = 0;
+      i = need;
+    }
+    while (i + 64 <= n) {
+      for (j = 0; j < 64; j++) { block[j] = bytes[i + j]; }
+      this.compress(block);
+      i += 64;
+    }
+    if (i < n) {
+      for (j = 0; j < n - i; j++) { block[j] = bytes[i + j]; }
+      this.blockLen = n - i;
+    }
+  };
+
+  Sha256.prototype.digestHex = function () {
+    var padLen = this.blockLen < 56 ? 64 : 128;
+    var tail = new Uint8Array(padLen);
+    var i, j;
+    for (i = 0; i < this.blockLen; i++) { tail[i] = this.block[i]; }
+    tail[this.blockLen] = 0x80;
+    var bitsLo = (this.totalLo * 8) % 4294967296;
+    var bitsHi = this.totalHi * 8 + Math.floor((this.totalLo * 8) / 4294967296);
+    var pos = padLen - 8;
+    tail[pos] = (bitsHi >>> 24) & 0xFF;
+    tail[pos + 1] = (bitsHi >>> 16) & 0xFF;
+    tail[pos + 2] = (bitsHi >>> 8) & 0xFF;
+    tail[pos + 3] = bitsHi & 0xFF;
+    tail[pos + 4] = (bitsLo >>> 24) & 0xFF;
+    tail[pos + 5] = (bitsLo >>> 16) & 0xFF;
+    tail[pos + 6] = (bitsLo >>> 8) & 0xFF;
+    tail[pos + 7] = bitsLo & 0xFF;
+    var b1 = tail;
+    var b2 = null;
+    if (padLen === 128) {
+      b1 = new Uint8Array(64);
+      b2 = new Uint8Array(64);
+      for (j = 0; j < 64; j++) { b1[j] = tail[j]; b2[j] = tail[64 + j]; }
+    }
+    this.compress(b1);
+    if (b2) { this.compress(b2); }
+    var out = '';
+    for (i = 0; i < 8; i++) {
+      out += ('00000000' + (this.h[i] >>> 0).toString(16)).slice(-8);
+    }
+    return out;
+  };
+
+  function sha256Hex(bytes) {
+    var ctx = new Sha256();
+    ctx.update(bytes);
+    return ctx.digestHex();
+  }
+
+  /* ---------- 表头识别 ---------- */
+  function isHeaderLine(line) {
+    var f = line.split('\t');
+    if (f.length < 6) { return false; }
+    var i, v;
+    for (i = 0; i < 6; i++) {
+      v = f[i].replace(/\s+/g, '').replace(/\uFEFF/g, '').toLowerCase();
+      if (v !== COLUMNS[i]) { return false; }
+    }
+    return true;
+  }
+
+  /* ---------- 回读分片 ---------- */
+  function parseShardText(text) {
+    var res = { ok: false, declared: 0, rows: null, bytes: 0, message: '' };
+    res.bytes = utf8ByteLength(text);
+    if (text.indexOf(HEADER_A) !== 0) {
+      res.message = '缺少分片头注释';
+      return res;
+    }
+    var m = /^\/\* 僧中词典数据分片 (\d+) · 本片 (\d+) 条 \*\//.exec(text);
+    if (!m) {
+      res.message = '分片头注释格式不符';
+      return res;
+    }
+    res.declared = parseInt(m[2], 10);
+    var prefix = 'window.DICT_ROWS = (window.DICT_ROWS || []).concat([\n';
+    var idx = text.indexOf(prefix);
+    if (idx < 0) {
+      res.message = '缺少 DICT_ROWS 挂载语句';
+      return res;
+    }
+    if (text.substring(text.length - TAIL.length) !== TAIL) {
+      res.message = '分片结尾缺失';
+      return res;
+    }
+    var body = text.substring(idx + prefix.length, text.length - TAIL.length);
+    try {
+      res.rows = JSON.parse('[' + body + '\n]');
+    } catch (e) {
+      res.message = '分片 JSON 结构无法解析：' + e.message;
+      return res;
+    }
+    if (!res.rows || res.rows.length !== res.declared) {
+      res.message = '分片头声明 ' + res.declared + ' 条，实际解析 ' + (res.rows ? res.rows.length : 0) + ' 条';
+      return res;
+    }
+    var i;
+    for (i = 0; i < res.rows.length; i++) {
+      if (!res.rows[i] || res.rows[i].length !== 6) {
+        res.message = '第 ' + (i + 1) + ' 条记录字段数不是 6';
+        return res;
+      }
+    }
+    res.ok = true;
+    return res;
+  }
+
+  /* ---------- 转换任务（分步执行，便于进度显示） ---------- */
+  function Job(bytes, fileName, options) {
+    var opts = options || {};
+    this.hashCtx = null;
+    this.state = {
+      bytes: bytes,
+      name: fileName || 'dictionary.txt',
+      opts: {
+        allowInvalid: !!opts.allowInvalid,
+        limit: opts.limit || LIMIT,
+        hashChunk: opts.hashChunk || 1048576,
+        parseChunk: opts.parseChunk || 3000,
+        buildChunk: opts.buildChunk || 4000
+      },
+      phase: 'decode',
+      pct: 0,
+      label: '正在解码源文件…',
+      text: '',
+      bom: false,
+      invalid: 0,
+      decodeMode: '',
+      sha: '',
+      hashPos: 0,
+      lines: [],
+      totalLines: 0,
+      linePos: 0,
+      rows: [],
+      rowPos: 0,
+      cur: null,
+      shardNo: 0,
+      shards: [],
+      shardRows: [],
+      shardBytes: [],
+      manifestText: '',
+      verifyPos: 0,
+      verifySum: 0,
+      manifestVerified: false,
+      verified: false,
+      headerSkipped: false,
+      stats: {
+        rows: 0, zh: 0, verified: 0, verifiedOnly: 0, firstPass: 0, mt: 0, pending: 0,
+        emptyHead: 0, emptyEn: 0, emptySi: 0, shortFields: 0, duplicates: 0,
+        blankLines: 0, extraColumns: 0
+      },
+      samples: { emptyHead: [], shortFields: [], duplicates: [] },
+      warnings: [],
+      errors: [],
+      done: false,
+      errorCode: ''
+    };
+  }
+
+  Job.prototype.fail = function (code, msg) {
+    var s = this.state;
+    s.errorCode = code;
+    s.errors.push(msg);
+    s.phase = 'error';
+    s.label = '已停止';
+    s.done = true;
+  };
+
+  Job.prototype.tick = function () {
+    var s = this.state;
+    if (s.done) { return true; }
+    try {
+      if (s.phase === 'decode') { this.decodeStep(); }
+      else if (s.phase === 'hash') { this.hashStep(); }
+      else if (s.phase === 'split') { this.splitStep(); }
+      else if (s.phase === 'parse') { this.parseStep(); }
+      else if (s.phase === 'build') { this.buildStep(); }
+      else if (s.phase === 'manifest') { this.manifestStep(); }
+      else if (s.phase === 'verify') { this.verifyStep(); }
+    } catch (e) {
+      this.fail('INTERNAL', '内部错误：' + (e && e.message ? e.message : String(e)));
+    }
+    return s.done;
+  };
+
+  Job.prototype.decodeStep = function () {
+    var s = this.state, bytes = s.bytes;
+    if (!bytes || !bytes.length) {
+      this.fail('EMPTY', '文件为空，没有可转换的内容。');
+      return;
+    }
+    if (typeof global.Uint8Array === 'undefined' || !bytes.subarray) {
+      this.fail('BROWSER', '当前浏览器不支持所需的二进制接口，请使用较新的 Chrome / Edge / Firefox。');
+      return;
+    }
+    var start = 0;
+    if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+      start = 3;
+      s.bom = true;
+    }
+    if (typeof global.TextDecoder !== 'undefined') {
+      try {
+        var td = new TextDecoder('utf-8', { fatal: true });
+        s.text = td.decode(bytes.subarray(start));
+        s.invalid = 0;
+        s.decodeMode = 'TextDecoder 严格模式';
+      } catch (e1) {
+        try {
+          var td2 = new TextDecoder('utf-8');
+          s.text = td2.decode(bytes.subarray(start));
+          s.invalid = countReplacement(s.text);
+          s.decodeMode = 'TextDecoder 替换模式';
+        } catch (e2) {
+          var r2 = decodeUtf8Manual(bytes, start);
+          s.text = r2.text;
+          s.invalid = r2.invalid;
+          s.decodeMode = '手动解码';
+        }
+      }
+    } else {
+      var r1 = decodeUtf8Manual(bytes, start);
+      s.text = r1.text;
+      s.invalid = r1.invalid;
+      s.decodeMode = '手动解码（浏览器无 TextDecoder）';
+    }
+    if (s.text.charAt(0) === '\uFEFF') { s.text = s.text.substring(1); }
+    if (!s.text) {
+      this.fail('EMPTY', '文件解码后没有文本内容。');
+      return;
+    }
+    if (s.invalid > 0) {
+      var pos = s.text.indexOf('\uFFFD');
+      var snip = pos >= 0 ? snippetAround(s.text, pos) : '';
+      s.warnings.push('检测到 ' + s.invalid + ' 处无法按 UTF-8 解码的序列（疑似 GBK/ANSI 编码或文件损坏）。' +
+        (snip ? '附近内容：“' + snip + '”' : ''));
+      if (!s.opts.allowInvalid) {
+        this.fail('ENCODING', '检测到 ' + s.invalid + ' 处非 UTF-8 序列，已暂停转换。建议把源文件另存为 UTF-8 后重新选择。');
+        return;
+      }
+      s.warnings.push('已按“忽略乱码”继续：非法序列被替换为 \uFFFD，产物内容可能含乱码。');
+    }
+    s.phase = 'hash';
+    s.label = '正在计算源文件 SHA-256…';
+    s.pct = 6;
+    this.hashCtx = new Sha256();
+    s.hashPos = 0;
+  };
+
+  Job.prototype.hashStep = function () {
+    var s = this.state, bytes = s.bytes;
+    var end = Math.min(s.hashPos + s.opts.hashChunk, bytes.length);
+    this.hashCtx.update(bytes.subarray(s.hashPos, end));
+    s.hashPos = end;
+    if (s.hashPos >= bytes.length) {
+      s.sha = this.hashCtx.digestHex();
+      this.hashCtx = null;
+      s.phase = 'split';
+      s.label = '正在拆分文本行…';
+      s.pct = 14;
+    } else {
+      s.pct = 6 + 8 * (s.hashPos / bytes.length);
+    }
+  };
+
+  Job.prototype.splitStep = function () {
+    var s = this.state;
+    var lines = s.text.split(/\r\n|\r|\n/);
+    /* .NET ReadLine 不产生末尾“换行后的空行”，保持一致 */
+    if (lines.length > 1 && lines[lines.length - 1] === '' && /\r$|\n$/.test(s.text)) {
+      lines.pop();
+    }
+    s.lines = lines;
+    s.totalLines = lines.length;
+    s.text = '';
+    var first = -1, i;
+    for (i = 0; i < lines.length && i < 5; i++) {
+      if (lines[i].length > 0) { first = i; break; }
+    }
+    if (first >= 0 && isHeaderLine(lines[first])) {
+      s.headerSkipped = true;
+      s.linePos = first + 1;
+    } else {
+      s.linePos = 0;
+    }
+    s.phase = 'parse';
+    s.label = '正在解析词条字段…';
+    s.pct = 18;
+  };
+
+  Job.prototype.addSample = function (kind, lineNo, en, si) {
+    var list = this.state.samples[kind];
+    if (list.length < 5) {
+      list.push({ line: lineNo, en: en, si: si });
+    }
+  };
+
+  Job.prototype.parseStep = function () {
+    var s = this.state, lines = s.lines, st = s.stats;
+    var end = Math.min(s.linePos + s.opts.parseChunk, s.totalLines);
+    var dupMap = this.dupMap || (this.dupMap = {});
+    for (; s.linePos < end; s.linePos++) {
+      var line = lines[s.linePos];
+      var lineNo = s.linePos + 1;
+      if (line.length === 0) {
+        st.blankLines++;
+        continue;
+      }
+      var f = line.split('\t');
+      if (f.length < 6) {
+        st.shortFields++;
+        this.addSample('shortFields', lineNo, f[0] || '', f[1] || '');
+      }
+      if (f.length > 6) { st.extraColumns++; }
+      var en = f[0] || '', si = f[1] || '', ty = f[2] || '', zh = f[3] || '', status = f[4] || '', note = f[5] || '';
+      s.rows.push([en, si, ty, zh, status, note]);
+      st.rows++;
+
+      if (zh) {
+        st.zh++;
+        if (status === '机翻待校') { st.mt++; }
+        else {
+          st.verified++;
+          if (status === '初校') { st.firstPass++; } else { st.verifiedOnly++; }
+        }
+      } else {
+        st.pending++;
+      }
+
+      if (en === '' || si === '') {
+        st.emptyHead++;
+        if (en === '') { st.emptyEn++; }
+        if (si === '') { st.emptySi++; }
+        this.addSample('emptyHead', lineNo, en, si);
+      }
+
+      var key = '$' + en + '\u0001' + si + '\u0001' + ty + '\u0001' + zh + '\u0001' + status + '\u0001' + note;
+      if (hasOwn(dupMap, key)) {
+        st.duplicates++;
+        this.addSample('duplicates', lineNo, en, si);
+      } else {
+        dupMap[key] = 1;
+      }
+    }
+    if (s.linePos >= s.totalLines) {
+      if (st.rows === 0) {
+        this.fail('NO_ROWS', '没有解析到任何数据行，请检查文件是否为 6 列 TSV 文本。');
+        return;
+      }
+      s.lines = [];
+      s.phase = 'build';
+      s.label = '正在生成 JS 分片…';
+      s.pct = 55;
+    } else {
+      s.pct = 18 + 37 * (s.linePos / s.totalLines);
+    }
+  };
+
+  Job.prototype.flushShard = function () {
+    var s = this.state, limit = s.opts.limit, cur = s.cur;
+    if (!cur || cur.count === 0) { return true; }
+    var no = s.shardNo + 1;
+    var name = 'shard_' + pad3(no) + '.js';
+    var text = headerText(no, cur.count) + cur.list.join(',\n') + TAIL;
+    var bytes = utf8ByteLength(text);
+    if (bytes >= limit) {
+      this.fail('SHARD_OVER', '分片 ' + name + ' 实际 ' + bytes + ' 字节，达到/超过上限 ' + limit + '，已停止。');
+      return false;
+    }
+    s.shards.push({ no: no, name: name, path: 'data/' + name, rows: cur.count, bytes: bytes, text: text });
+    s.shardRows.push(cur.count);
+    s.shardBytes.push(bytes);
+    s.shardNo = no;
+    s.cur = { count: 0, bytes: 0, list: [] };
+    return true;
+  };
+
+  Job.prototype.buildStep = function () {
+    var s = this.state, limit = s.opts.limit;
+    if (!s.cur) { s.cur = { count: 0, bytes: 0, list: [] }; }
+    var total = s.rows.length;
+    var end = Math.min(s.rowPos + s.opts.buildChunk, total);
+    for (; s.rowPos < end; s.rowPos++) {
+      var row = s.rows[s.rowPos];
+      var rowText = serializeRow(row);
+      var rowBytes = utf8ByteLength(rowText);
+      var sepBytes = s.cur.count > 0 ? 2 : 0;
+      var prospective = headerBytes(s.shardNo + 1, s.cur.count + 1) + s.cur.bytes + sepBytes + rowBytes + TAIL_BYTES;
+      if (s.cur.count > 0 && prospective >= limit) {
+        if (!this.flushShard()) { return; }
+        sepBytes = 0;
+        prospective = headerBytes(s.shardNo + 1, 1) + rowBytes + TAIL_BYTES;
+      }
+      if (prospective >= limit) {
+        this.fail('ROW_TOO_LARGE', '单条词条（约 ' + rowBytes + ' 字节）加片头后已达到/超过上限 ' + limit +
+          '，无法在严格小于 5MB 的前提下生成合法分片。请先处理该条数据。');
+        return;
+      }
+      if (s.cur.count > 0) { s.cur.bytes += 2; }
+      s.cur.bytes += rowBytes;
+      s.cur.list.push(rowText);
+      s.cur.count++;
+    }
+    if (s.rowPos >= total) {
+      if (!this.flushShard()) { return; }
+      s.rows = [];
+      s.phase = 'manifest';
+      s.label = '正在生成 manifest.js…';
+      s.pct = 84;
+    } else {
+      s.pct = 55 + 29 * (s.rowPos / total);
+    }
+  };
+
+  Job.prototype.manifestStep = function () {
+    var s = this.state, st = s.stats;
+    var list = [], rowList = [], byteList = [], i;
+    for (i = 0; i < s.shards.length; i++) {
+      list.push(quote(s.shards[i].path));
+      rowList.push(String(s.shards[i].rows));
+      byteList.push(String(s.shards[i].bytes));
+    }
+    var m = '/* 僧中词典 · 分片清单（由 convert.html 自动生成，请勿手工编辑） */\n' +
+      'window.DICT_MANIFEST = {\n' +
+      '  "generated": ' + quote(nowStamp()) + ',\n' +
+      '  "rows": ' + st.rows + ',\n' +
+      '  "zh": ' + st.zh + ',\n' +
+      '  "verified": ' + st.verified + ',\n' +
+      '  "verifiedOnly": ' + st.verifiedOnly + ',\n' +
+      '  "firstPass": ' + st.firstPass + ',\n' +
+      '  "mt": ' + st.mt + ',\n' +
+      '  "pending": ' + st.pending + ',\n' +
+      '  "shards": [' + list.join(', ') + '],\n' +
+      '  "shardRows": [' + rowList.join(', ') + '],\n' +
+      '  "shardBytes": [' + byteList.join(', ') + '],\n' +
+      '  "shardCount": ' + s.shards.length + ',\n' +
+      '  "maxBytes": ' + s.opts.limit + ',\n' +
+      '  "lineCount": ' + s.totalLines + ',\n' +
+      '  "blankLines": ' + st.blankLines + ',\n' +
+      '  "headerSkipped": ' + (s.headerSkipped ? 'true' : 'false') + ',\n' +
+      '  "source": ' + quote(s.name) + ',\n' +
+      '  "sourceBytes": ' + s.bytes.length + ',\n' +
+      '  "sourceSha256": ' + quote(s.sha) + ',\n' +
+      '  "encoding": ' + quote(s.bom ? 'UTF-8 (BOM)' : 'UTF-8') + ',\n' +
+      '  "invalidSequences": ' + s.invalid + ',\n' +
+      '  "emptyHeadRows": ' + st.emptyHead + ',\n' +
+      '  "shortFieldRows": ' + st.shortFields + ',\n' +
+      '  "duplicateRows": ' + st.duplicates + '\n' +
+      '};\n';
+    s.manifestText = m;
+    s.phase = 'verify';
+    s.label = '正在回读校验分片…';
+    s.pct = 86;
+    s.verifyPos = 0;
+    s.verifySum = 0;
+  };
+
+  Job.prototype.verifyStep = function () {
+    var s = this.state, i;
+    if (s.verifyPos < s.shards.length) {
+      var sh = s.shards[s.verifyPos];
+      var r = parseShardText(sh.text);
+      if (!r.ok) {
+        s.errors.push('回读失败 · ' + sh.name + '：' + r.message);
+      } else {
+        s.verifySum += r.rows.length;
+        if (r.bytes !== sh.bytes) {
+          s.errors.push('回读失败 · ' + sh.name + '：声明 ' + sh.bytes + ' 字节，实测 ' + r.bytes + ' 字节。');
+        }
+        if (r.bytes >= s.opts.limit) {
+          s.errors.push('回读失败 · ' + sh.name + '：' + r.bytes + ' 字节，达到/超过上限 ' + s.opts.limit + '。');
+        }
+      }
+      s.verifyPos++;
+      s.pct = 86 + 10 * (s.verifyPos / s.shards.length);
+      return;
+    }
+    if (!s.manifestVerified) {
+      try {
+        var marker = 'window.DICT_MANIFEST = ';
+        var idx = s.manifestText.indexOf(marker);
+        var body = s.manifestText.substring(idx + marker.length, s.manifestText.lastIndexOf(';'));
+        var mo = JSON.parse(body);
+        var ok = true;
+        if (mo.rows !== s.stats.rows) { ok = false; s.errors.push('清单校验失败：rows 字段与源数据行数不一致。'); }
+        if (mo.shardCount !== s.shards.length || mo.shards.length !== s.shards.length) {
+          ok = false; s.errors.push('清单校验失败：分片数与清单记录不一致。');
+        }
+        for (i = 0; i < s.shards.length; i++) {
+          if (mo.shardRows[i] !== s.shards[i].rows) {
+            ok = false; s.errors.push('清单校验失败：' + s.shards[i].name + ' 的条数与清单不一致。');
+          }
+          if (mo.shardBytes[i] !== s.shards[i].bytes) {
+            ok = false; s.errors.push('清单校验失败：' + s.shards[i].name + ' 的字节数与清单不一致。');
+          }
+        }
+        if (mo.sourceSha256 !== s.sha) {
+          ok = false; s.errors.push('清单校验失败：sourceSha256 与本次计算值不一致。');
+        }
+        s.manifestObj = mo;
+        s.manifestVerified = true;
+        if (!ok) { s.warnings.push('清单字段存在不一致，请查看错误列表。'); }
+      } catch (e) {
+        s.errors.push('清单校验失败：manifest.js 无法按 JSON 解析（' + e.message + '）。');
+        s.manifestVerified = true;
+      }
+      s.pct = 97;
+      return;
+    }
+    if (s.verifySum !== s.stats.rows) {
+      s.errors.push('回读校验失败：分片条数合计 ' + s.verifySum + ' ≠ 源文件数据行数 ' + s.stats.rows + '。');
+      s.errorCode = 'MISMATCH';
+    }
+    if (s.errors.length) {
+      s.phase = 'error';
+      s.label = '校验未通过';
+      s.done = true;
+      if (!s.errorCode) { s.errorCode = 'VERIFY'; }
+      return;
+    }
+    s.verified = true;
+    s.phase = 'done';
+    s.label = '完成';
+    s.pct = 100;
+    s.done = true;
+  };
+
+  global.SZK_CONVERT_CORE = {
+    LIMIT: LIMIT,
+    createJob: function (bytes, fileName, options) { return new Job(bytes, fileName, options); },
+    sha256Hex: sha256Hex,
+    utf8ByteLength: utf8ByteLength,
+    decodeUtf8Manual: decodeUtf8Manual,
+    serializeRow: serializeRow,
+    headerText: headerText,
+    parseShardText: parseShardText
+  };
+})(window);
+</script>
+
+<script>
+/* ============================================================
+   页面交互层（ES5）
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var core = window.SZK_CONVERT_CORE;
+  var LIMIT = core ? core.LIMIT : 5000000;
+  var currentJob = null;
+  var lastBytes = null;
+  var lastName = '';
+  var jobId = 0;
+
+  function $(id) { return document.getElementById(id); }
+  function addClass(el, c) {
+    if (!el || !el.className) { return; }
+    if ((' ' + el.className + ' ').indexOf(' ' + c + ' ') < 0) { el.className += ' ' + c; }
+  }
+  function removeClass(el, c) {
+    if (!el) { return; }
+    var s = ' ' + (el.className || '') + ' ';
+    s = s.replace(' ' + c + ' ', ' ');
+    el.className = s.replace(/^\s+|\s+$/g, '');
+  }
+  function show(el) { removeClass(el, 'hide'); }
+  function hide(el) { addClass(el, 'hide'); }
+
+  function esc(s) {
+    s = (s === null || s === undefined) ? '' : String(s);
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function fmtInt(n) {
+    var s = String(n), out = '', i, c;
+    for (i = s.length - 1; i >= 0; i--) {
+      c = s.charAt(i);
+      out = c + out;
+      if ((s.length - i) % 3 === 0 && i > 0) { out = ',' + out; }
+    }
+    return out;
+  }
+
+  function fmtMb(n) {
+    if (n >= 1048576) { return (n / 1048576).toFixed(2) + ' MB'; }
+    if (n >= 1024) { return (n / 1024).toFixed(1) + ' KB'; }
+    return String(n) + ' 字节';
+  }
+
+  function truncate(s, n) {
+    s = String(s === null || s === undefined ? '' : s);
+    return s.length > n ? s.substring(0, n) + '…' : s;
+  }
+
+  var el = {
+    badge: $('readyBadge'),
+    alertCard: $('alertCard'), alertBox: $('alertBox'), alertTitle: $('alertTitle'),
+    alertMsg: $('alertMsg'), alertActions: $('alertActions'),
+    pickCard: $('pickCard'), dropZone: $('dropZone'), fileInput: $('fileInput'),
+    pickMeta: $('pickMeta'), supportNote: $('supportNote'),
+    progCard: $('progCard'), progLabel: $('progLabel'), progPct: $('progPct'),
+    progBar: $('progBar'), progSub: $('progSub'),
+    statCard: $('statCard'), statGrid: $('statGrid'), headNote: $('headNote'),
+    sampleBlock: $('sampleBlock'), sampleList: $('sampleList'),
+    shardCard: $('shardCard'), shardTbody: $('shardTbody'), shardTotal: $('shardTotal'),
+    verifyCard: $('verifyCard'), verifyBody: $('verifyBody'),
+    downCard: $('downCard'), downAllBtn: $('downAllBtn'), downAllText: $('downAllText'),
+    downManifestBtn: $('downManifestBtn'), downNote: $('downNote')
+  };
+
+  var SVG = {
+    warn: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 9v5"/><path d="M12 17.2v.1"/></svg>',
+    error: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6"/><path d="M15 9l-6 6"/></svg>',
+    ok: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/></svg>'
+  };
+
+  function showAlert(kind, title, msgHtml, actionLabel, actionFn) {
+    el.alertBox.className = 'alert ' + (kind === 'error' ? 'error' : 'warn');
+    el.alertTitle.innerHTML = (kind === 'error' ? SVG.error : SVG.warn) + '<span>' + esc(title) + '</span>';
+    el.alertMsg.innerHTML = msgHtml;
+    el.alertActions.innerHTML = '';
+    if (actionLabel && actionFn) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn';
+      b.appendChild(document.createTextNode(actionLabel));
+      b.onclick = actionFn;
+      el.alertActions.appendChild(b);
+    }
+    show(el.alertCard);
+  }
+  function hideAlert() { hide(el.alertCard); }
+
+  function resetResultPanels() {
+    hide(el.statCard);
+    hide(el.shardCard);
+    hide(el.verifyCard);
+    hide(el.downCard);
+    hide(el.sampleBlock);
+    el.statGrid.innerHTML = '';
+    el.sampleList.innerHTML = '';
+    el.shardTbody.innerHTML = '';
+    el.verifyBody.innerHTML = '';
+    el.statCard.className = 'card hide';
+  }
+
+  function setProgress(pct, label) {
+    if (pct < 0) { pct = 0; }
+    if (pct > 100) { pct = 100; }
+    el.progBar.style.width = pct.toFixed(1) + '%';
+    el.progPct.innerHTML = Math.round(pct) + '%';
+    if (label) { el.progLabel.innerHTML = esc(label); }
+  }
+
+  function phaseSub(st) {
+    if (st.phase === 'decode') { return '识别 BOM、解码 UTF-8…'; }
+    if (st.phase === 'hash') {
+      return '已计算 ' + fmtInt(st.hashPos) + ' / ' + fmtInt(st.bytes.length) + ' 字节';
+    }
+    if (st.phase === 'split') { return '解码完成，准备拆分文本行…'; }
+    if (st.phase === 'parse') {
+      return '已扫描 ' + fmtInt(st.linePos) + ' / ' + fmtInt(st.totalLines) + ' 行 · 已收录 ' +
+        fmtInt(st.stats.rows) + ' 条';
+    }
+    if (st.phase === 'build') {
+      return '已处理 ' + fmtInt(st.rowPos) + ' / ' + fmtInt(st.stats.rows) + ' 条 · 已生成 ' +
+        st.shards.length + ' 片';
+    }
+    if (st.phase === 'manifest') { return '分片生成完毕，正在写清单…'; }
+    if (st.phase === 'verify') {
+      return '正在逐片回读校验（' + st.verifyPos + ' / ' + st.shards.length + '）';
+    }
+    if (st.phase === 'done') {
+      return '共 ' + fmtInt(st.stats.rows) + ' 条，' + st.shards.length + ' 片，合计 ' +
+        fmtInt(st.shardBytes.length ? totalShardBytes(st) : 0) + ' 字节';
+    }
+    if (st.phase === 'error') { return '已停止：' + (st.errors.length ? st.errors[0] : '未知错误'); }
+    return '';
+  }
+
+  function totalShardBytes(st) {
+    var i, sum = 0;
+    for (i = 0; i < st.shardBytes.length; i++) { sum += st.shardBytes[i]; }
+    return sum;
+  }
+
+  function updateProgress(job) {
+    var st = job.state;
+    setProgress(st.pct, st.label);
+    el.progSub.innerHTML = esc(phaseSub(st));
+    show(el.progCard);
+  }
+
+  function handleFile(file) {
+    if (!file) { return; }
+    hideAlert();
+    resetResultPanels();
+    el.pickMeta.innerHTML = '已选择：<b>' + esc(file.name) + '</b> · ' + fmtInt(file.size) + ' 字节（' + fmtMb(file.size) + '）';
+    el.badge.innerHTML = '读取中…';
+
+    if (!window.FileReader) {
+      showAlert('error', '浏览器不支持 FileReader',
+        '<p>当前浏览器无法读取本地文件。请使用较新的 Chrome、Edge 或 Firefox。</p>');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onerror = function () {
+      showAlert('error', '文件读取失败', '<p>无法读取该文件，可能没有权限或文件已被移动。</p>');
+      el.badge.innerHTML = '读取失败';
+    };
+    reader.onload = function () {
+      var bytes;
+      try {
+        bytes = new Uint8Array(reader.result);
+      } catch (e) {
+        showAlert('error', '浏览器不支持二进制读取', '<p>请使用较新的浏览器。</p>');
+        return;
+      }
+      lastBytes = bytes;
+      lastName = file.name;
+      startJob(bytes, file.name, false);
+    };
+    reader.readAsArrayBuffer(file);
+    el.fileInput.value = '';
+  }
+
+  function startJob(bytes, name, allowInvalid) {
+    hideAlert();
+    resetResultPanels();
+    show(el.progCard);
+    setProgress(0, '正在解码源文件…');
+    el.progSub.innerHTML = '准备中…';
+    el.badge.innerHTML = '转换中…';
+    el.fileInput.disabled = true;
+    el.downAllBtn.disabled = true;
+
+    jobId++;
+    var id = jobId;
+    currentJob = core.createJob(bytes, name, { allowInvalid: allowInvalid });
+    drive(id);
+  }
+
+  function drive(id) {
+    if (id !== jobId || !currentJob) { return; }
+    var done = false;
+    try {
+      done = currentJob.tick();
+    } catch (e) {
+      colorAlert('error', '转换中断', '<p>内部错误：' + esc(e && e.message ? e.message : String(e)) + '</p>');
+      el.fileInput.disabled = false;
+      el.badge.innerHTML = '已停止';
+      return;
+    }
+    updateProgress(currentJob);
+    if (done) {
+      finish(currentJob);
+      return;
+    }
+    setTimeout(function () { drive(id); }, 0);
+  }
+
+  /* 兼容：drive 内错误提示 */
+  function colorAlert(kind, title, msg) { showAlert(kind, title, msg); }
+
+  function finish(job) {
+    var st = job.state;
+    el.fileInput.disabled = false;
+    if (st.errorCode === 'ENCODING') {
+      el.badge.innerHTML = '等待确认';
+      showAlert('warn', '检测到疑似乱码 / 非 UTF-8 编码',
+        '<p>' + esc(st.errors[0] || '') + '</p>' +
+        '<p>建议用记事本或编辑器把源文件“另存为 UTF-8”，再重新选择。' +
+        (st.bom ? '当前文件带 UTF-8 BOM。' : '当前文件没有 BOM。') +
+        '</p>',
+        '忽略乱码继续转换',
+        function () {
+          hideAlert();
+          startJob(lastBytes, lastName, true);
+        });
+      return;
+    }
+    if (st.errors.length) {
+      el.badge.innerHTML = '校验失败';
+      renderStats(job);
+      renderVerify(job);
+      var html = '<ul>';
+      var i;
+      for (i = 0; i < st.errors.length; i++) { html += '<li>' + esc(st.errors[i]) + '</li>'; }
+      html += '</ul>';
+      showAlert('error', '转换或校验未通过', '<p>未生成可下载产物（或产物不可信）。</p>' + html);
+      return;
+    }
+    el.badge.innerHTML = '校验通过';
+    renderStats(job);
+    renderShards(job);
+    renderVerify(job);
+    renderDownload(job);
+    el.downAllBtn.disabled = false;
+  }
+
+  function statCard(k, v, note, cls) {
+    return '<div class="stat ' + (cls || '') + '"><div class="stat-inner">' +
+      '<div class="stat-k">' + esc(k) + '</div>' +
+      '<div class="stat-v">' + esc(v) + '</div>' +
+      '<div class="stat-n">' + esc(note || '') + '</div>' +
+      '</div></div>';
+  }
+
+  function renderStats(job) {
+    var st = job.state, s = st.stats;
+    var html = '';
+    html += statCard('数据行数', fmtInt(s.rows), '源文件非空数据行', '');
+    html += statCard('分片数', fmtInt(st.shards.length), '每片严格小于 ' + fmtInt(st.opts.limit) + ' 字节', '');
+    html += statCard('空词头', fmtInt(s.emptyHead), '空英文 ' + fmtInt(s.emptyEn) + ' · 空僧文 ' + fmtInt(s.emptySi), s.emptyHead ? 'warn' : '');
+    html += statCard('字段缺失', fmtInt(s.shortFields), '不足 6 列的记录数', s.shortFields ? 'warn' : '');
+    html += statCard('重复行', fmtInt(s.duplicates), '按 6 列完全相同的重复次数', s.duplicates ? 'warn' : '');
+    html += statCard('空中文', fmtInt(s.pending), 'zh 为空（待补）的记录数', '');
+    html += statCard('空行', fmtInt(s.blankLines), '已跳过，不计入数据行', '');
+    html += statCard('乱码序列', fmtInt(st.invalid), st.decodeMode || 'UTF-8', st.invalid ? 'bad' : '');
+    el.statGrid.innerHTML = html;
+    el.headNote.innerHTML = st.headerSkipped
+      ? '已识别并跳过首行表头（en / si / type / zh / status / note）；共读入 ' + fmtInt(st.totalLines) + ' 行。'
+      : '未识别到表头，所有非空行均按数据行处理；共读入 ' + fmtInt(st.totalLines) + ' 行。';
+
+    var sampleHtml = '';
+    sampleHtml += renderSampleGroup('空词头', st.samples.emptyHead, 'en / si');
+    sampleHtml += renderSampleGroup('字段缺失', st.samples.shortFields, 'line / en / si');
+    sampleHtml += renderSampleGroup('重复行', st.samples.duplicates, 'line / en / si');
+    if (sampleHtml) {
+      el.sampleList.innerHTML = sampleHtml;
+      show(el.sampleBlock);
+    }
+    show(el.statCard);
+  }
+
+  function renderSampleGroup(title, list, fields) {
+    if (!list || !list.length) { return ''; }
+    var html = '<div class="sample-group"><span class="g-title">' + esc(title) + '</span>' +
+      '（' + esc(fields) + '）<ul>';
+    var i, it;
+    for (i = 0; i < list.length; i++) {
+      it = list[i];
+      html += '<li>第 ' + fmtInt(it.line) + ' 行 · en=<code>' + esc(truncate(it.en, 26)) +
+        '</code> · si=<code>' + esc(truncate(it.si, 30)) + '</code></li>';
+    }
+    html += '</ul></div>';
+    return html;
+  }
+
+  function renderShards(job) {
+    var st = job.state;
+    var html = '', i, sh, slack;
+    for (i = 0; i < st.shards.length; i++) {
+      sh = st.shards[i];
+      slack = st.opts.limit - sh.bytes;
+      html += '<tr>' +
+        '<td>' + fmtInt(sh.no) + '</td>' +
+        '<td>' + esc(sh.name) + '</td>' +
+        '<td class="num">' + fmtInt(sh.rows) + '</td>' +
+        '<td class="num">' + fmtInt(sh.bytes) + ' 字节 <span style="color:#9a8e7b">(' + fmtMb(sh.bytes) + ')</span></td>' +
+        '<td><span class="pill ok">正常</span> <span style="color:#8c8070;font-size:12px">余 ' + fmtInt(slack) + ' 字节</span></td>' +
+        '<td><button type="button" class="btn-small" data-shard="' + i + '">下载</button></td>' +
+        '</tr>';
+    }
+    el.shardTbody.innerHTML = html;
+    var sum = totalShardBytes(st);
+    el.shardTotal.innerHTML = '分片合计：<b>' + fmtInt(st.stats.rows) + '</b> 条 · ' +
+      '<b>' + fmtInt(sum) + '</b> 字节（' + fmtMb(sum) + '） · 上限 ' + fmtInt(st.opts.limit) + ' 字节/片';
+    show(el.shardCard);
+  }
+
+  function renderVerify(job) {
+    var st = job.state;
+    var html = '';
+    var sum = st.verifySum;
+    if (st.verified) {
+      html += '<div class="verify-pass">' +
+        '<div class="vt">' + SVG.ok + ' 回读校验通过</div>' +
+        '<div class="verify-body">' +
+        '<ul>' +
+        '<li>分片条数合计 <b>' + fmtInt(sum) + '</b> = 源文件数据行数 <b>' + fmtInt(st.stats.rows) + '</b></li>' +
+        '<li>已逐片回读并 JSON 解析：' + st.shards.length + ' / ' + st.shards.length + ' 片结构合法，每片均严格小于 ' + fmtInt(st.opts.limit) + ' 字节</li>' +
+        '<li>manifest.js 已回读解析：条数、分片数、每片条数与字节数、SHA-256 字段一致</li>' +
+        '<li>源文件 SHA-256：<span class="sha">' + esc(st.sha) + '</span></li>' +
+        '</ul></div></div>';
+    } else {
+      html += '<div class="verify-fail">' +
+        '<div class="vt">' + SVG.error + ' 回读校验未通过</div>' +
+        '<div class="verify-body"><ul>';
+      if (st.errors.length) {
+        var i;
+        for (i = 0; i < st.errors.length; i++) { html += '<li>' + esc(st.errors[i]) + '</li>'; }
+      } else {
+        html += '<li>未知校验错误。</li>';
+      }
+      html += '</ul></div></div>';
+    }
+    if (st.warnings.length) {
+      html += '<div class="verify-body" style="margin-top:12px;color:#7a6328"><b>提示：</b><ul>';
+      var j;
+      for (j = 0; j < st.warnings.length; j++) { html += '<li>' + esc(st.warnings[j]) + '</li>'; }
+      html += '</ul></div>';
+    }
+    el.verifyBody.innerHTML = html;
+    show(el.verifyCard);
+  }
+
+  function renderDownload(job) {
+    var st = job.state;
+    var n = st.shards.length + 1;
+    el.downAllText.innerHTML = '一键下载全部产物（' + n + ' 个文件）';
+    show(el.downCard);
+    el.downNote.innerHTML = '<b>提示：</b>将依次下载 ' + n +
+      ' 个文件（' + st.shards.length + ' 个分片 + manifest.js）。浏览器可能询问“是否允许下载多个文件”，请选择允许；若被拦截，可使用上面的表格逐个下载。';
+  }
+
+  function downloadText(name, text) {
+    var blob;
+    try {
+      blob = new Blob([text], { type: 'text/javascript;charset=utf-8' });
+    } catch (e) {
+      alert('当前浏览器无法创建 Blob 下载，请改用较新的浏览器。');
+      return false;
+    }
+    if (window.navigator && window.navigator.msSaveBlob) {
+      window.navigator.msSaveBlob(blob, name);
+      return true;
+    }
+    var url = (window.URL || window.webkitURL).createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.setAttribute('download', name);
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    if (a.click) {
+      a.click();
+    } else if (document.createEvent) {
+      var ev = document.createEvent('MouseEvents');
+      ev.initEvent('click', true, true);
+      a.dispatchEvent(ev);
+    }
+    setTimeout(function () {
+      try { document.body.removeChild(a); } catch (e1) {}
+      setTimeout(function () {
+        try { (window.URL || window.webkitURL).revokeObjectURL(url); } catch (e2) {}
+      }, 2000);
+    }, 4000);
+    return true;
+  }
+
+  function downloadShard(index) {
+    var st = currentJob && currentJob.state;
+    if (!st || !st.shards[index]) { return; }
+    downloadText(st.shards[index].name, st.shards[index].text);
+  }
+
+  el.shardTbody.onclick = function (e) {
+    var t = e.target || e.srcElement;
+    while (t && t !== el.shardTbody) {
+      if (t.getAttribute && t.getAttribute('data-shard') !== null) {
+        downloadShard(parseInt(t.getAttribute('data-shard'), 10));
+        return;
+      }
+      t = t.parentNode;
+    }
+  };
+
+  el.downManifestBtn.onclick = function () {
+    if (currentJob && currentJob.state.manifestText) {
+      downloadText('manifest.js', currentJob.state.manifestText);
+    }
+  };
+
+  el.downAllBtn.onclick = function () {
+    var st = currentJob && currentJob.state;
+    if (!st || !st.verified) { return; }
+    var i = 0, files = [];
+    for (i = 0; i < st.shards.length; i++) {
+      files.push({ name: st.shards[i].name, text: st.shards[i].text });
+    }
+    files.push({ name: 'manifest.js', text: st.manifestText });
+    var idx = 0;
+    function nextOne() {
+      if (idx >= files.length) {
+        el.downNote.innerHTML = '<b>已触发：</b>' + files.length +
+          ' 个下载任务。若浏览器拦截，请允许本页多文件下载，或使用上方表格逐个下载。';
+        return;
+      }
+      var f = files[idx++];
+      downloadText(f.name, f.text);
+      setTimeout(nextOne, 450);
+    }
+    nextOne();
+  };
+
+  el.fileInput.onchange = function () {
+    if (el.fileInput.files && el.fileInput.files.length) {
+      handleFile(el.fileInput.files[0]);
+    }
+  };
+
+  /* 拖拽支持（不支持拖拽的浏览器不受影响） */
+  function isFileDrag(e) {
+    var dt = e.dataTransfer;
+    if (!dt) { return false; }
+    if (dt.types) {
+      if (dt.types.indexOf && dt.types.indexOf('Files') >= 0) { return true; }
+      if (dt.types.contains && dt.types.contains('Files')) { return true; }
+    }
+    return false;
+  }
+  el.dropZone.ondragenter = function (e) {
+    if (isFileDrag(e)) { e.preventDefault(); addClass(el.dropZone, 'over'); }
+  };
+  el.dropZone.ondragover = function (e) {
+    if (isFileDrag(e)) { e.preventDefault(); addClass(el.dropZone, 'over'); }
+  };
+  el.dropZone.ondragleave = function () { removeClass(el.dropZone, 'over'); };
+  el.dropZone.ondrop = function (e) {
+    removeClass(el.dropZone, 'over');
+    if (!isFileDrag(e)) { return; }
+    e.preventDefault();
+    var files = e.dataTransfer.files;
+    if (files && files.length) { handleFile(files[0]); }
+  };
+  window.ondragover = function (e) { if (isFileDrag(e)) { e.preventDefault(); } };
+  window.ondrop = function (e) { if (isFileDrag(e)) { e.preventDefault(); } };
+
+  /* 初始化 */
+  document.documentElement.className += ' js-ready';
+  el.badge.innerHTML = '就绪';
+  var support = [];
+  if (!window.FileReader) { support.push('缺少 FileReader'); }
+  if (typeof window.Uint8Array === 'undefined') { support.push('缺少 Uint8Array'); }
+  if (typeof window.TextDecoder === 'undefined') { support.push('缺少 TextDecoder（将使用手动 UTF-8 解码）'); }
+  el.supportNote.innerHTML = support.length
+    ? '兼容提示：' + esc(support.join('；')) + '。'
+    : '浏览器能力检测通过：FileReader / Uint8Array / TextDecoder 均可用。';
+})();
+</script>
+</body>
+</html>

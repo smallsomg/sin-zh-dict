@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>15 分钟倒计时</title>
+<style>
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  background: #eef1f8;
+  background-image: radial-gradient(circle at 18% 8%, #e5e9fd 0%, rgba(238,241,248,0) 58%), radial-gradient(circle at 84% 92%, #e1f2f4 0%, rgba(238,241,248,0) 52%);
+  color: #17213a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  transition: background-color .45s ease, color .45s ease;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { width: 100%; max-width: 430px; }
+.card {
+  background: #ffffff;
+  border: 1px solid rgba(23, 33, 58, .06);
+  border-radius: 22px;
+  padding: 26px 24px 20px;
+  box-shadow: 0 22px 50px rgba(23, 33, 58, .12), 0 2px 6px rgba(23, 33, 58, .05);
+  transition: background-color .45s ease, border-color .45s ease, box-shadow .45s ease;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8a93ad;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  margin-bottom: 14px;
+}
+.head svg { margin-right: 6px; }
+.alert {
+  display: none;
+  text-align: center;
+  margin: 0 0 8px;
+}
+.alert span {
+  display: inline-block;
+  padding: 5px 13px;
+  border-radius: 999px;
+  background: #ffe8ec;
+  color: #d92748;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  animation: softBlink 1.2s ease-in-out infinite;
+}
+.time {
+  text-align: center;
+  font-size: 78px;
+  font-size: clamp(58px, 18vw, 88px);
+  line-height: 1.06;
+  letter-spacing: .03em;
+  font-weight: 700;
+  color: #14203c;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  transition: color .3s ease;
+  margin: 2px 0 4px;
+}
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7b85a0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  min-height: 18px;
+}
+.status.on { color: #4a59ea; }
+.status.paused { color: #b4822e; }
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c3c9da;
+  margin-right: 8px;
+  flex: 0 0 auto;
+  transition: background-color .3s ease;
+}
+.status.on .dot { background: #5b6cff; animation: dotPulse 1.6s ease-in-out infinite; }
+.status.paused .dot { background: #e0a23c; }
+.track {
+  height: 6px;
+  border-radius: 999px;
+  background: #eef0f7;
+  margin: 18px 0 16px;
+  overflow: hidden;
+  transition: background-color .3s ease;
+}
+.fill {
+  height: 100%;
+  width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #5b6cff, #8b96ff);
+  transition: width .18s linear, background .3s ease;
+}
+.meta { display: flex; }
+.meta-item {
+  flex: 1 1 0;
+  min-width: 0;
+  background: #f6f7fb;
+  border: 1px solid #eceef6;
+  border-radius: 12px;
+  padding: 10px 12px;
+  transition: background-color .45s ease, border-color .45s ease;
+}
+.meta-item + .meta-item { margin-left: 10px; }
+.k {
+  display: block;
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: #8b94ad;
+  margin-bottom: 5px;
+  white-space: nowrap;
+}
+.v {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  color: #1f2a46;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  transition: color .45s ease;
+}
+.toggle {
+  width: 100%;
+  margin-top: 18px;
+  padding: 15px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #6273ff, #4f5ff0);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 18px rgba(79, 95, 240, .28);
+  transition: transform .12s ease, box-shadow .2s ease, background .3s ease, color .3s ease;
+}
+.toggle:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(79, 95, 240, .34); }
+.toggle:active { transform: translateY(0) scale(.99); }
+.toggle .ico { display: flex; margin-right: 8px; }
+.row { display: flex; margin-top: 10px; }
+.row button {
+  flex: 1 1 0;
+  border: 1px solid #e6e9f3;
+  background: #f7f8fc;
+  color: #3a4568;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 11px 4px;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .2s ease;
+}
+.row button + button { margin-left: 8px; }
+.row button:hover { background: #eff1fa; border-color: #d8dcef; }
+.row button:active { background: #e7eafa; }
+button:focus { outline: none; }
+button:focus-visible { outline: 2px solid #7c8cff; outline-offset: 2px; }
+.hint {
+  text-align: center;
+  color: #98a1b8;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 14px;
+  transition: color .45s ease;
+}
+body.done {
+  background: #2a0f18;
+  background-image: radial-gradient(circle at 18% 8%, #471523 0%, rgba(42, 15, 24, 0) 62%), radial-gradient(circle at 84% 92%, #5c1727 0%, rgba(42, 15, 24, 0) 56%);
+  color: #ffe6ec;
+}
+body.done .card {
+  background: #33121c;
+  border-color: rgba(255, 122, 148, .22);
+  box-shadow: 0 22px 60px rgba(120, 14, 40, .45);
+}
+body.done .head { color: #c98f9f; }
+body.done .alert span { background: rgba(255, 92, 120, .16); color: #ff9aac; }
+body.done .time { color: #ff6b85; }
+body.done .status { color: #ffb3c2; }
+body.done .dot { background: #ff6b85; animation: dotPulse 1.1s ease-in-out infinite; }
+body.done .track { background: #4a1b28; }
+body.done .fill { background: #ff6b85; }
+body.done .meta-item { background: #3d1622; border-color: #4d1c2b; }
+body.done .k { color: #c98f9f; }
+body.done .v { color: #ffe6ec; }
+body.done .toggle { background: #ff5c78; color: #2a0f18; box-shadow: 0 8px 22px rgba(255, 60, 100, .32); }
+body.done .row button { background: #4a1c29; border-color: #5a2131; color: #ffd6df; }
+body.done .row button:hover { background: #55202f; }
+body.done .hint { color: #c98f9f; }
+body.done button:focus-visible { outline-color: #ff8fa3; }
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .5; transform: scale(.84); }
+}
+@keyframes softBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .62; }
+}
+@media (max-width: 420px) {
+  .card { padding: 22px 18px 18px; border-radius: 18px; }
+  .time { font-size: 56px; font-size: clamp(52px, 17vw, 76px); }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="head">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+        <path d="M12 7.2V12l3.2 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+      </svg>
+      <span>专注倒计时</span>
+    </div>
+    <div class="alert" id="alert"><span>时间到 · 已到时</span></div>
+    <div class="time" id="time">15:00</div>
+    <div class="status" id="status" aria-live="polite"><span class="dot" id="dot"></span><span id="statusText">准备就绪</span></div>
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="meta">
+      <div class="meta-item">
+        <span class="k">上一次开始时间</span>
+        <span class="v" id="startAt">—</span>
+      </div>
+      <div class="meta-item">
+        <span class="k">本次已用时长</span>
+        <span class="v" id="used">00:00</span>
+      </div>
+    </div>
+    <button class="toggle" id="toggle" type="button" aria-label="开始">
+      <span class="ico" id="iconPlay">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+          <path d="M8 5.4v13.2l11-6.6z" fill="currentColor"></path>
+        </svg>
+      </span>
+      <span class="ico" id="iconPause" style="display:none">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+          <rect x="7" y="5.5" width="3.4" height="13" rx="1" fill="currentColor"></rect>
+          <rect x="13.6" y="5.5" width="3.4" height="13" rx="1" fill="currentColor"></rect>
+        </svg>
+      </span>
+      <span id="toggleText">开始</span>
+    </button>
+    <div class="row">
+      <button id="reset" type="button">重新开始</button>
+      <button id="plus" type="button">+5 分钟</button>
+      <button id="minus" type="button">−5 分钟</button>
+    </div>
+    <div class="hint">到 00:00 会变色提示并尝试响铃；刷新页面回到 15:00。</div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+
+  var DEFAULT_MS = 15 * 60 * 1000;
+  var STEP_MS = 5 * 60 * 1000;
+  var TICK_MS = 200;
+
+  var timeEl = document.getElementById('time');
+  var statusEl = document.getElementById('status');
+  var statusText = document.getElementById('statusText');
+  var fillEl = document.getElementById('fill');
+  var startAtEl = document.getElementById('startAt');
+  var usedEl = document.getElementById('used');
+  var alertEl = document.getElementById('alert');
+  var toggleBtn = document.getElementById('toggle');
+  var toggleText = document.getElementById('toggleText');
+  var iconPlay = document.getElementById('iconPlay');
+  var iconPause = document.getElementById('iconPause');
+  var resetBtn = document.getElementById('reset');
+  var plusBtn = document.getElementById('plus');
+  var minusBtn = document.getElementById('minus');
+
+  var remaining = DEFAULT_MS;
+  var running = false;
+  var finished = false;
+  var hasStarted = false;
+  var endAt = 0;
+  var timerId = null;
+  var lastStart = null;
+  var lastStatusKey = '';
+  var doneFlag = false;
+
+  function pad2(n) {
+    return n < 10 ? '0' + n : '' + n;
+  }
+
+  function fmt(ms, roundUp) {
+    if (ms < 0) ms = 0;
+    var sec = roundUp ? Math.ceil(ms / 1000) : Math.floor(ms / 1000);
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    return pad2(m) + ':' + pad2(s);
+  }
+
+  function clockText(d) {
+    return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+  }
+
+  function updateStatus() {
+    var key, cls, text;
+    if (finished) {
+      key = 'done';
+      cls = 'status';
+      text = '已到时';
+    } else if (running) {
+      key = 'on';
+      cls = 'status on';
+      text = '计时中';
+    } else if (hasStarted) {
+      key = 'paused';
+      cls = 'status paused';
+      text = '已暂停';
+    } else {
+      key = 'idle';
+      cls = 'status';
+      text = '准备就绪';
+    }
+    if (key === lastStatusKey) return;
+    lastStatusKey = key;
+    statusEl.className = cls;
+    statusText.textContent = text;
+  }
+
+  function render() {
+    timeEl.textContent = fmt(remaining, true);
+    var pct = remaining / DEFAULT_MS * 100;
+    if (pct < 0) pct = 0;
+    if (pct > 100) pct = 100;
+    fillEl.style.width = pct.toFixed(2) + '%';
+    var used = DEFAULT_MS - remaining;
+    if (used < 0) used = 0;
+    usedEl.textContent = fmt(used, false);
+    startAtEl.textContent = lastStart ? clockText(lastStart) : '—';
+    updateStatus();
+  }
+
+  function syncToggle() {
+    var label;
+    if (running) {
+      label = '暂停';
+    } else if (finished) {
+      label = '再次开始';
+    } else if (hasStarted) {
+      label = '继续';
+    } else {
+      label = '开始';
+    }
+    toggleText.textContent = label;
+    toggleBtn.setAttribute('aria-label', label);
+    iconPlay.style.display = running ? 'none' : '';
+    iconPause.style.display = running ? '' : 'none';
+  }
+
+  function setDone(on) {
+    on = !!on;
+    if (on === doneFlag) return;
+    doneFlag = on;
+    document.body.className = on ? 'done' : '';
+    alertEl.style.display = on ? 'block' : 'none';
+  }
+
+  function clearTimer() {
+    if (timerId !== null) {
+      window.clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  function tick() {
+    remaining = endAt - new Date().getTime();
+    if (remaining <= 0) {
+      remaining = 0;
+      finish();
+      return;
+    }
+    render();
+  }
+
+  function start() {
+    if (running) return;
+    if (remaining <= 0) {
+      remaining = DEFAULT_MS;
+      finished = false;
+      setDone(false);
+    }
+    running = true;
+    finished = false;
+    hasStarted = true;
+    lastStart = new Date();
+    endAt = lastStart.getTime() + remaining;
+    if (timerId === null) timerId = window.setInterval(tick, TICK_MS);
+    render();
+    syncToggle();
+  }
+
+  function pause() {
+    if (!running) return;
+    remaining = endAt - new Date().getTime();
+    if (remaining < 0) remaining = 0;
+    running = false;
+    clearTimer();
+    if (remaining === 0) {
+      finish();
+      return;
+    }
+    render();
+    syncToggle();
+  }
+
+  function finish() {
+    clearTimer();
+    running = false;
+    finished = true;
+    remaining = 0;
+    setDone(true);
+    render();
+    syncToggle();
+    if (hasStarted) beep();
+  }
+
+  function reset() {
+    clearTimer();
+    running = false;
+    finished = false;
+    hasStarted = false;
+    lastStart = null;
+    remaining = DEFAULT_MS;
+    setDone(false);
+    render();
+    syncToggle();
+  }
+
+  function adjust(delta) {
+    var now = new Date().getTime();
+    if (running) remaining = endAt - now;
+    remaining = remaining + delta;
+    if (remaining < 0) remaining = 0;
+    finished = false;
+    setDone(false);
+    if (remaining === 0) {
+      finish();
+      return;
+    }
+    if (running) endAt = now + remaining;
+    render();
+    syncToggle();
+  }
+
+  function tone(ctx, delay, freq) {
+    try {
+      var t = ctx.currentTime + delay;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.28, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.26);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.28);
+    } catch (e) {}
+  }
+
+  function beep() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      var ctx = new AC();
+      if (ctx.state === 'suspended' && ctx.resume) {
+        try { ctx.resume(); } catch (ignore) {}
+      }
+      tone(ctx, 0, 880);
+      tone(ctx, 0.3, 660);
+      window.setTimeout(function () {
+        try { if (ctx.close) ctx.close(); } catch (ignore) {}
+      }, 1600);
+    } catch (e) {
+      // 浏览器不支持音频时静默降级
+    }
+  }
+
+  toggleBtn.addEventListener('click', function () {
+    if (running) {
+      pause();
+    } else {
+      start();
+    }
+  });
+  resetBtn.addEventListener('click', reset);
+  plusBtn.addEventListener('click', function () { adjust(STEP_MS); });
+  minusBtn.addEventListener('click', function () { adjust(-STEP_MS); });
+
+  render();
+  syncToggle();
+})();
+</script>
+</body>
+</html>
